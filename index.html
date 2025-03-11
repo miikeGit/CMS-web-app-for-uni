@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <title>Document</title>
+</head>
+
+<body>
+  <header class="header">
+    <h1 class="headerTitle">CMS</h1>
+
+    <nav class="nav">
+      <li><a href="#">Dashboard</a></li>
+      <li><a href="#">Students</a></li>
+      <li><a href="#">Tasks</a></li>
+    </nav>
+
+    <div class="header-right">
+        
+          <button class="notification">
+            <div class="bell-icon">
+              <span class="material-icons">notifications</span>
+            </div>
+          </button>
+        
+      </div>
+      
+      <div class="user-container">
+        <div class="user">
+          <img class="user__img" src="https://www.w3schools.com/howto/img_avatar.png" alt="Avatar" />
+          <p class="user__name">Mykhailo</p>
+        </div>
+
+        <div class="user-panel">
+          <ul>
+            <button>Profile</button>
+            <button>Sign out</button>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <div class="main">
+
+    <div class="datatable-container">
+
+      <button class="button-common add-student-btn" id="add-student-btn">
+        <i class="material-icons">add_circle</i>
+        <span>Add new student</span>
+      </button>
+      
+      <button class="button-common delete-student-btn" id="delete-student-btn">
+        <i class="material-icons">delete</i>
+        <span>Delete selected students</span>
+      </button>
+      
+      <table class="datatable" id="students-table">
+        <thead>
+          <caption> Students </caption>
+          <tr>
+            <th><input type="checkbox" /></th>
+            <th>Group</th>
+            <th>Name</th>
+            <th>Gender</th>
+            <th>Birthday</th>
+            <th>Status</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+    
+        <tbody></tbody>
+      
+      </table>
+
+    </div>
+
+  <div class="modal-wrapper hidden" id="confirm-deletion">
+    <div class="modal confirm">
+      <h3 id="confirm-question">Are you sure you want to delete?</h3>
+      <div class="confirm-buttons">
+        <button id="confirm-deletion-btn" class="confirm-btn">Yes</button>
+        <button id="cancel-deletion-btn" class="confirm-btn cancel">No</button>      
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-wrapper hidden" id="add-student">
+    <div class="modal">
+      <h2 id="modal-title">Add student</h2>
+      <form class="add-student__form" id="add-student-form">
+        <div class="form-line">
+          <label for="group">Group</label>
+          <select name="group" id="group">
+            <option value="" disabled hidden selected>- Select group -</option>
+            <option value="PZ-22">PZ-22</option>
+            <option value="PZ-23">PZ-23</option>
+            <option value="PZ-24">PZ-24</option>
+          </select>
+        </div>
+        <div class="form-line">
+          <label for="name">First Name</label>
+          <input type="text" name="name" id="name" required>
+        </div>
+        <div class="form-line">
+          <label for="surname">Last Name</label>
+          <input type="text" name="surname" id="surname" required>
+        </div>
+        <div class="form-line">
+          <label for="gender">Gender</label>
+          <select name="gender" id="gender">
+            <option value="" disabled hidden selected>- Select gender -</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+        <div class="form-line">
+          <label for="birthday">Birthday</label>
+          <input type="date" name="birthday" id="birthday" required>
+        </div>
+        <input type="submit" value="OK"/>
+        <button class="btn-close" id="close-modal-btn">Close</button>
+      </form>
+    </div>
+  </div>
+
+  
+</body>
+</html>
