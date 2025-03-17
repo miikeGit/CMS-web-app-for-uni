@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <title>Document</title>
+</head>
+
+<body>
+	<header class="header">
+		<h1><a href="./" class="logo-link">CMS</a></h1>
+	
+		<button class="menu-toggle" id="menu-toggle">
+		  <span class="material-icons">menu</span>
+		</button>
+	
+		<nav class="nav" id="nav-menu">
+		  <a href="dashboard.html" id="nav-dashboard">Dashboard</a>
+		  <a href="index.html" id="nav-students">Students</a>
+		  <a href="tasks.html" id="nav-tasks">Tasks</a>
+		</nav>
+	
+		<div class="header-right">
+		  <div class="dropdown">
+			<button class="dropdown-btn bell-icon">
+			  <span class="material-icons">notifications</span>
+			  <span class="badge" id="badge">3</span>
+			</button>
+	
+			<div class="dropdown-content notifications-content">
+			  <ul class="messages-list">
+				<li>
+				  <span class="material-icons">account_circle</span>
+					<div class="message-text"><strong>Євгенія Левус</strong><p>Вас відраховано.</p></div>
+				  <span class="time">2m</span>
+				</li>
+				<li>
+				  <span class="material-icons">account_circle</span>
+				  <div class="message-text">
+					<strong>Тоні Старк</strong><p>Lorem Ipsum.</p></div>
+				  <span class="time">10m</span>
+				</li>
+			
+				<li>
+				  <span class="material-icons">account_circle</span>
+				  <div class="message-text">
+					<strong>Майкл Джордан</strong><p>Я переїхав в каліфорнію.</p></div>
+				  <span class="time">30m</span>
+				</li>
+			  </ul>
+			</div>
+		  </div>
+	  
+		  <div class="dropdown">
+			<button class="dropdown-btn"><span class="material-icons">account_circle</span></button>
+			<div class="dropdown-content profile-content">
+			  <ul>
+				<li><a href="#">Profile</a></li>
+				<li><a href="#">Sign Out</a></li>
+			  </ul>
+			</div>
+		  </div>
+		</div>
+	  </header>

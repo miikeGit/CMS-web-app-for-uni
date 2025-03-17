@@ -12,61 +12,71 @@
 
 <body>
   <header class="header">
-    <h1 class="headerTitle">CMS</h1>
+    <h1><a href="./" class="logo-link">CMS</a></h1>
 
-    <nav class="nav">
-      <li><a href="#">Dashboard</a></li>
-      <li><a href="#">Students</a></li>
-      <li><a href="#">Tasks</a></li>
+    <button class="menu-toggle" id="menu-toggle">
+      <span class="material-icons">menu</span>
+    </button>
+
+    <nav class="nav" id="nav-menu">
+      <a href="dashboard.html" id="nav-dashboard">Dashboard</a>
+      <a href="index.html" id="nav-students">Students</a>
+      <a href="tasks.html" id="nav-tasks">Tasks</a>
     </nav>
 
     <div class="header-right">
-        
-          <button class="notification">
-            <div class="bell-icon">
-              <span class="material-icons">notifications</span>
-            </div>
-          </button>
-        
-      </div>
-      
-      <div class="user-container">
-        <div class="user">
-          <img class="user__img" src="https://www.w3schools.com/howto/img_avatar.png" alt="Avatar" />
-          <p class="user__name">Mykhailo</p>
-        </div>
+      <div class="dropdown">
+        <button class="dropdown-btn bell-icon">
+          <span class="material-icons">notifications</span>
+          <span class="badge" id="badge">3</span>
+        </button>
 
-        <div class="user-panel">
-          <ul>
-            <button>Profile</button>
-            <button>Sign out</button>
+        <div class="dropdown-content notifications-content">
+          <ul class="messages-list">
+            <li>
+              <span class="material-icons">account_circle</span>
+                <div class="message-text"><strong>Євгенія Левус</strong><p>Вас відраховано.</p></div>
+              <span class="time">2m</span>
+            </li>
+            <li>
+              <span class="material-icons">account_circle</span>
+              <div class="message-text">
+                <strong>Тоні Старк</strong><p>Lorem Ipsum.</p></div>
+              <span class="time">10m</span>
+            </li>
+        
+            <li>
+              <span class="material-icons">account_circle</span>
+              <div class="message-text">
+                <strong>Майкл Джордан</strong><p>Я переїхав в каліфорнію.</p></div>
+              <span class="time">30m</span>
+            </li>
           </ul>
         </div>
-
       </div>
-
+  
+      <div class="dropdown">
+        <button class="dropdown-btn"><span class="material-icons">account_circle</span></button>
+        <div class="dropdown-content profile-content">
+          <ul>
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">Sign Out</a></li>
+          </ul>
+        </div>
+      </div>
     </div>
   </header>
 
   <div class="main">
-
     <div class="datatable-container">
-
-      <button class="button-common add-student-btn" id="add-student-btn">
-        <i class="material-icons">add_circle</i>
-        <span>Add new student</span>
-      </button>
-      
-      <button class="button-common delete-student-btn" id="delete-student-btn">
-        <i class="material-icons">delete</i>
-        <span>Delete selected students</span>
-      </button>
+      <button class="button-common add-student-btn" id="add-student-btn"><i class="material-icons">add</i></button>
+      <button class="button-common delete-student-btn" id="delete-selected-btn"><i class="material-icons">delete</i></button>
       
       <table class="datatable" id="students-table">
+        <caption> Students </caption>
         <thead>
-          <caption> Students </caption>
           <tr>
-            <th><input type="checkbox" /></th>
+            <th><input type="checkbox" id="select-all"></th>
             <th>Group</th>
             <th>Name</th>
             <th>Gender</th>
@@ -75,62 +85,60 @@
             <th>Options</th>
           </tr>
         </thead>
-    
-        <tbody></tbody>
-      
+        <tbody id="students-table-body"></tbody>
       </table>
-
     </div>
 
-  <div class="modal-wrapper hidden" id="confirm-deletion">
-    <div class="modal confirm">
-      <h3 id="confirm-question">Are you sure you want to delete?</h3>
-      <div class="confirm-buttons">
-        <button id="confirm-deletion-btn" class="confirm-btn">Yes</button>
-        <button id="cancel-deletion-btn" class="confirm-btn cancel">No</button>      
+    <div class="pagination">
+      <a href="#">&laquo;</a>
+      <a class="active" href="#">1</a>
+      <a href="#">2</a>
+      <a href="#">3</a>
+      <a href="#">4</a>
+      <a href="#">5</a>
+      <a href="#">6</a>
+      <a href="#">&raquo;</a>
+    </div>
+
+    <div class="modal-wrapper hidden" id="confirm-deletion">
+      <div class="modal confirm">
+        <h3 id="confirm-question">Are you sure you want to delete this student?</h3>
+        <div class="confirm-buttons">
+          <button id="confirm-deletion-btn" class="confirm-btn">Yes</button>
+          <button id="cancel-deletion-btn" class="confirm-btn cancel">No</button>      
+        </div>
       </div>
-    </div>
-  </div>
+    </div>    
 
-  <div class="modal-wrapper hidden" id="add-student">
-    <div class="modal">
-      <h2 id="modal-title">Add student</h2>
-      <form class="add-student__form" id="add-student-form">
-        <div class="form-line">
-          <label for="group">Group</label>
-          <select name="group" id="group">
-            <option value="" disabled hidden selected>- Select group -</option>
-            <option value="PZ-22">PZ-22</option>
-            <option value="PZ-23">PZ-23</option>
-            <option value="PZ-24">PZ-24</option>
-          </select>
-        </div>
-        <div class="form-line">
-          <label for="name">First Name</label>
-          <input type="text" name="name" id="name" required>
-        </div>
-        <div class="form-line">
-          <label for="surname">Last Name</label>
-          <input type="text" name="surname" id="surname" required>
-        </div>
-        <div class="form-line">
-          <label for="gender">Gender</label>
-          <select name="gender" id="gender">
-            <option value="" disabled hidden selected>- Select gender -</option>
-            <option value="M">Male</option>
-            <option value="F">Female</option>
-          </select>
-        </div>
-        <div class="form-line">
-          <label for="birthday">Birthday</label>
-          <input type="date" name="birthday" id="birthday" required>
-        </div>
-        <input type="submit" value="OK"/>
-        <button class="btn-close" id="close-modal-btn">Close</button>
-      </form>
-    </div>
+    <div class="modal-wrapper hidden" id="add-student-modal">
+      <div class="modal">
+        <h2>Add Student</h2>
+        <form id="add-student-form">
+          <div class="form-line">
+            <label for="group">Group</label>
+            <select id="group" required>
+              <option value="" disabled hidden selected>- Select group -</option>
+              <option value="PZ-22">PZ-22</option>
+              <option value="PZ-23">PZ-23</option>
+              <option value="PZ-24">PZ-24</option>
+            </select>
+          </div>
+          <div class="form-line"><label for="name">First Name</label><input type="text" id="name" required></div>
+          <div class="form-line"><label for="surname">Last Name</label><input type="text" id="surname" required></div>
+          <div class="form-line"><label for="gender">Gender</label>
+            <select id="gender" required>
+              <option value="" disabled hidden selected>- Select gender -</option>
+              <option value="M">Male</option><option value="F">Female</option>
+            </select>
+          </div>
+          <div class="form-line"><label for="birthday">Birthday</label><input type="date" id="birthday" required></div>
+          <div class="modal-buttons">
+            <button type="submit" class="confirm-btn">Add</button>
+            <button type="button" class="confirm-btn cancel" id="close-modal-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>  
   </div>
-
-  
 </body>
 </html>
