@@ -47,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+          
         if (!confirm("Are you sure you want to delete selected students?")) return;
 
         checkboxes.forEach(checkbox => { checkbox.closest("tr").remove(); });
@@ -104,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const newRow = document.createElement("tr");
       newRow.setAttribute("data-id", student.id);
       newRow.innerHTML = `
-        <td><input type="checkbox" class="student-checkbox"></td>
+        <td><input type="checkbox" class="student-checkbox" aria-label="Select"><span>foo</span></td>
         <td>${student.group}</td>
         <td>${student.name} ${student.surname}</td>
         <td>${student.gender === "M" ? "Male" : "Female"}</td>
@@ -125,10 +126,14 @@ document.addEventListener("DOMContentLoaded", () => {
       tableBody.appendChild(newRow);
 
       newRow.querySelector(".delete-btn").addEventListener("click", () => {
+        const studentName = `${student.name} ${student.surname}`;
         studentToDelete = student.id;
+    
+        document.getElementById("confirm-question").textContent = `Are you sure you want to delete ${studentName}?`;
+    
         confirmModal.classList.remove("hidden"); 
         confirmModal.classList.add("visible");
-      });
+    });
     }
 
     confirmBtn.addEventListener("click", () => {

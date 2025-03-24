@@ -8,6 +8,8 @@ input[type="checkbox"] {
 	accent-color: #bb86fc;
 }
 
+
+
 .main {
 	display: grid;
 	margin: 120px 150px 0px 150px;
@@ -206,6 +208,12 @@ caption {
 	border-bottom: solid 1px white;
 	background-color: #151b23;
 }
+
+.datatable-container .datatable th span,
+.datatable-container .datatable td span {
+	opacity: 0;
+	filter: brightness(0);
+}
   
 .datatable-container .datatable td {
 	border-bottom: solid 1px white;
@@ -360,6 +368,7 @@ caption {
 	color: white;
 }
 
+
 .menu-toggle {
 	display: none;
 	background: none;
@@ -460,5 +469,9 @@ caption {
 		color: #ccc;
 		border-bottom: solid 1px white;
 		background-color: #151b23;
+	}
+
+	.dropdown-content {
+		right: -100px;
 	}
 }
