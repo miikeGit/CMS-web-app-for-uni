@@ -246,7 +246,7 @@ caption {
   
 .delete-student-btn {
 	background-color: #fbc2c2;
-	color: red;
+	color: rgb(0, 0, 0);
 	right: 100px;
 } 
   
@@ -271,6 +271,9 @@ caption {
 }
 
 .form-line {
+	display: flex;
+	flex-direction: column;
+  /* gap: 100px; */
   margin-bottom: 10px;
 }
 
@@ -441,5 +444,21 @@ caption {
 
 	caption {
 		visibility: hidden;
+	}
+	  
+	.datatable-container .datatable,
+	.datatable-container .datatable th,
+	.datatable-container .datatable td {
+		padding: 10px 10px;
+	}
+	  
+	.datatable-container .datatable th {
+		text-align: left;
+		font-size: 14px;
+		text-transform: uppercase;
+		font-weight: 100;
+		color: #ccc;
+		border-bottom: solid 1px white;
+		background-color: #151b23;
 	}
 }
