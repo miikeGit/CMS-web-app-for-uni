@@ -1,7 +1,8 @@
 {
 	"name": "CMS",
 	"short_name": "CMS",
-	"start_url": "/CMS-web-app-for-uni/index.html",
+	"start_url": "/CMS-web-app-for-uni",
+	"scope": "/CMS-web-app-for-uni",
 	"display": "standalone",
 	"background_color": "#0d1117",
 	"theme_color": "#010409",
