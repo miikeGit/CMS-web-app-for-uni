@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const navMenu = document.getElementById("nav-menu");
 
   const students = [];
+  let editingStudentId = null;
   let studentToDelete = null;
 
   navLinks.forEach(link => {
@@ -61,9 +62,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     openBtn.addEventListener("click", () => {
+      document.getElementById("modal-title").textContent = "Add Student";
+      document.getElementById("confirm-add-btn").textContent = "Add";
+    
+      editingStudentId = null;
+      form.reset();
+      
       modal.classList.add("visible");
       modal.classList.remove("hidden");
     });
+    
 
     closeBtn.addEventListener("click", () => {
       closeModal();
@@ -77,68 +85,94 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.classList.remove("visible");
       modal.classList.add("hidden");
       form.reset();
+      editingStudentId = null;
     }
 
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-
-      const student = {
-        id: Date.now(),
-        group: document.getElementById("group").value,
-        name: document.getElementById("name").value,
-        surname: document.getElementById("surname").value,
-        gender: document.getElementById("gender").value,
-        birthday: document.getElementById("birthday").value,
-      };
-
-      students.push(student);
-      addStudentToTable(student);
-      closeModal();
-    });
-
     function addStudentToTable(student) {
-
       const isOnline = student.name === "Mykhailo" && student.surname === "Malets";
       const statusText = isOnline ? "Online" : "Offline";
       const statusClass = isOnline ? "online" : "offline";
-
+    
       const newRow = document.createElement("tr");
       newRow.setAttribute("data-id", student.id);
       newRow.innerHTML = `
         <td>
           <div class="checkbox-wrapper">
-          <input type="checkbox" class="student-checkbox" aria-label="Select"><span>foo</span>
+            <input type="checkbox" class="student-checkbox" aria-label="Select">
           </div>
         </td>
-        <td>${student.group}</td>
-        <td>${student.name} ${student.surname}</td>
-        <td>${student.gender === "M" ? "Male" : "Female"}</td>
-        <td>${student.birthday}</td>
+        <td class="group">${student.group}</td>
+        <td class="name">${student.name} ${student.surname}</td>
+        <td class="gender">${student.gender === "M" ? "Male" : "Female"}</td>
+        <td class="birthday">${student.birthday}</td>
         <td>
           <div class="status-wrapper">
             <div class="dot-${statusClass}"></div>
             <span>${statusText}</span>
           </div>
         </td>
-        
         <td>
           <button class="datatable-btn edit-btn">Edit</button>
           <span> | </span>
           <button class="datatable-btn delete-btn">Delete</button>
         </td>`;
-
+    
       tableBody.appendChild(newRow);
-
+    
       newRow.querySelector(".delete-btn").addEventListener("click", () => {
         const studentName = `${student.name} ${student.surname}`;
         studentToDelete = student.id;
-    
         document.getElementById("confirm-question").textContent = `Are you sure you want to delete ${studentName}?`;
-    
-        confirmModal.classList.remove("hidden"); 
+        confirmModal.classList.remove("hidden");
         confirmModal.classList.add("visible");
-    });
+      });
+    
+      newRow.querySelector(".edit-btn").addEventListener("click", () => {
+        document.getElementById("name").value = student.name;
+        document.getElementById("surname").value = student.surname;
+        document.getElementById("group").value = student.group;
+        document.getElementById("gender").value = student.gender;
+        document.getElementById("birthday").value = student.birthday;
+    
+        editingStudentId = student.id;
+
+        document.getElementById("modal-title").textContent = "Edit Student";
+        document.getElementById("confirm-add-btn").textContent = "Save";
+    
+        modal.classList.add("visible");
+        modal.classList.remove("hidden");
+      });
     }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+    
+      const studentData = {
+        id: editingStudentId || Date.now(),
+        group: document.getElementById("group").value,
+        name: document.getElementById("name").value,
+        surname: document.getElementById("surname").value,
+        gender: document.getElementById("gender").value,
+        birthday: document.getElementById("birthday").value,
+      };
+    
+      if (editingStudentId) {
+        const existingRow = document.querySelector(`tr[data-id="${editingStudentId}"]`);
+
+        if (existingRow) {
+          existingRow.querySelector(".group").textContent = studentData.group;
+          existingRow.querySelector(".name").textContent = `${studentData.name} ${studentData.surname}`;
+          existingRow.querySelector(".gender").textContent = studentData.gender === "M" ? "Male" : "Female";
+          existingRow.querySelector(".birthday").textContent = studentData.birthday;
+        }
+        console.log("Edited student data:", JSON.stringify(studentData, null, 2));
+        editingStudentId = null;
+      } else {
+        addStudentToTable(studentData);
+      }
+    
+      closeModal();
+    });
 
     confirmBtn.addEventListener("click", () => {
       if (studentToDelete) {

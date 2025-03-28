@@ -236,7 +236,7 @@ caption {
   border: 0;
   right: 10px;
   position: absolute;
-
+  color: white;
 }
 
 .button-common:hover {
@@ -247,13 +247,11 @@ caption {
 
 .add-student-btn {
 	background-color: #076538;
-	color: #61f470;
 	right: 10px;
 }
   
 .delete-student-btn {
 	background-color: #650707;
-	color: white;
 	right: 100px;
 } 
   
