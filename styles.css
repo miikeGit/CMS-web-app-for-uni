@@ -209,12 +209,11 @@ caption {
 	background-color: #151b23;
 }
 
-.datatable-container .datatable th span,
-.datatable-container .datatable td span {
+.checkbox-wrapper span {
 	opacity: 0;
 	filter: brightness(0);
 }
-  
+
 .datatable-container .datatable td {
 	border-bottom: solid 1px white;
 }
@@ -223,7 +222,7 @@ caption {
 	background-color: #151b23;
 }
 
-.datatable-container .datatable tbody .status-wrapper {
+.status-wrapper {
 	gap: 10px;
 	display: flex;
 	align-items: center;
@@ -247,14 +246,14 @@ caption {
 }
 
 .add-student-btn {
-	background-color: #c2fbd7;
-	color: green;
+	background-color: #076538;
+	color: #61f470;
 	right: 10px;
 }
   
 .delete-student-btn {
-	background-color: #fbc2c2;
-	color: rgb(0, 0, 0);
+	background-color: #650707;
+	color: white;
 	right: 100px;
 } 
   
@@ -281,8 +280,7 @@ caption {
 .form-line {
 	display: flex;
 	flex-direction: column;
-  /* gap: 100px; */
-  margin-bottom: 10px;
+	margin-bottom: 10px;
 }
 
 .modal-buttons {
@@ -294,13 +292,20 @@ caption {
 .confirm-btn {
   padding: 8px 15px;
   border: none;
+  background: #bdbdbd;
+  transition: all ease-in-out .3s;
+}
+
+.confirm-btn:hover {
   cursor: pointer;
+  filter: brightness(1.2);
 }
 
 .cancel {
-  background: #f44336;
+  background: #5f5f5f;
   color: white;
 }
+
 
 .hidden {
   visibility: hidden;

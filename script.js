@@ -105,7 +105,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const newRow = document.createElement("tr");
       newRow.setAttribute("data-id", student.id);
       newRow.innerHTML = `
-        <td><input type="checkbox" class="student-checkbox" aria-label="Select"><span>foo</span></td>
+        <td>
+          <div class="checkbox-wrapper">
+          <input type="checkbox" class="student-checkbox" aria-label="Select"><span>foo</span>
+          </div>
+        </td>
         <td>${student.group}</td>
         <td>${student.name} ${student.surname}</td>
         <td>${student.gender === "M" ? "Male" : "Female"}</td>
