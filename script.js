@@ -1,3 +1,12 @@
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/service-worker.js")
+      .then(() => console.log("Service Worker registered"))
+      .catch((err) => console.log("Service Worker registration failed:", err));
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("add-student-modal");
   const openBtn = document.getElementById("add-student-btn");
