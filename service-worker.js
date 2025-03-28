@@ -1,5 +1,6 @@
 const CACHE_NAME = "cms-cache-v1";
 const urlsToCache = [
+  "/service-worker.js",
   "/",
   "/index.html",
   "/styles.css",
@@ -8,10 +9,10 @@ const urlsToCache = [
   "/messages.html",
   "/tasks.html",
   "/icons/icon-192x192.png",
-  "/icons/icon-512x512.png"
+  "/icons/icon-512x512.png",
+  "https://fonts.googleapis.com/icon?family=Material+Icons"
 ];
 
-// Встановлення Service Worker і кешування ресурсів
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -20,7 +21,6 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Обробка запитів: повернення кешу або завантаження з мережі
 self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
@@ -29,7 +29,6 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// Видалення старого кешу під час оновлення
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
