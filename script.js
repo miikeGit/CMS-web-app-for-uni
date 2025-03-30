@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const deleteBtn = document.getElementById("delete-selected-btn");
   const bellIcon = document.querySelector(".bell-icon");
   const badge = document.getElementById("badge");
-  const menuToggle = document.getElementById("menu-toggle");
+  const menuToggle = document.getElementById("nav-icon1");
   const navMenu = document.getElementById("nav-menu");
 
   const students = [];
@@ -208,6 +208,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   menuToggle.addEventListener("click", () => {
-    navMenu.classList.toggle("active"); 
+    menuToggle.classList.toggle("open");
+    navMenu.classList.toggle("active");
   });
+
 });
