@@ -1,7 +1,7 @@
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js")
+      .register("https://miikegit.github.io/CMS-web-app-for-uni/service-worker.js")
       .then(() => console.log("Service Worker registered"))
       .catch((err) => console.log("Service Worker registration failed:", err));
   });
