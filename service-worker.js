@@ -1,32 +1,32 @@
 const CACHE_NAME = "cms-cache-v1";
 
-// const urlsToCache = [
-//   "/CMS-web-app-for-uni/",
-//   "/CMS-web-app-for-uni/service-worker.js",
-//   "/CMS-web-app-for-uni/index.html",
-//   "/CMS-web-app-for-uni/styles.css",
-//   "/CMS-web-app-for-uni/script.js",
-//   "/CMS-web-app-for-uni/dashboard.html",
-//   "/CMS-web-app-for-uni/messages.html",
-//   "/CMS-web-app-for-uni/tasks.html",
-//   "/CMS-web-app-for-uni/icons/icon-192x192.png",
-//   "/CMS-web-app-for-uni/icons/icon-512x512.png",
-//   "https://fonts.googleapis.com/icon?family=Material+Icons"
-// ];
-
 const urlsToCache = [
-  "/",
-  "/service-worker.js",
-  "/index.html",
-  "/styles.css",
-  "/script.js",
-  "/dashboard.html",
-  "/messages.html",
-  "/tasks.html",
-  "/icons/icon-192x192.png",
-  "/icons/icon-512x512.png",
+  "/CMS-web-app-for-uni/",
+  "/CMS-web-app-for-uni/service-worker.js",
+  "/CMS-web-app-for-uni/index.html",
+  "/CMS-web-app-for-uni/styles.css",
+  "/CMS-web-app-for-uni/script.js",
+  "/CMS-web-app-for-uni/dashboard.html",
+  "/CMS-web-app-for-uni/messages.html",
+  "/CMS-web-app-for-uni/tasks.html",
+  "/CMS-web-app-for-uni/icons/icon-192x192.png",
+  "/CMS-web-app-for-uni/icons/icon-512x512.png",
   "https://fonts.googleapis.com/icon?family=Material+Icons"
 ];
+
+// const urlsToCache = [
+//   "/",
+//   "/service-worker.js",
+//   "/index.html",
+//   "/styles.css",
+//   "/script.js",
+//   "/dashboard.html",
+//   "/messages.html",
+//   "/tasks.html",
+//   "/icons/icon-192x192.png",
+//   "/icons/icon-512x512.png",
+//   "https://fonts.googleapis.com/icon?family=Material+Icons"
+// ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
