@@ -133,15 +133,15 @@
               <option value="PZ-24">PZ-24</option>
             </select>
           </div>
-          <div class="form-line"><label for="name">First Name</label><input type="text" id="name" required aria-label="First name"></div>
-          <div class="form-line"><label for="surname">Last Name</label><input type="text" id="surname" required aria-label="Second name"></div>
+          <div class="form-line"><label for="name">First Name</label><input type="text" id="name" required aria-label="First name"><span id="name-error" class="error-message"></span></div>
+          <div class="form-line"><label for="surname">Last Name</label><input type="text" id="surname" required aria-label="Second name"><span id="surname-error" class="error-message"></span></div>
           <div class="form-line"><label for="gender">Gender</label>
             <select id="gender" required>
               <option value="" disabled hidden selected>- Select gender -</option>
               <option value="M">Male</option><option value="F">Female</option>
             </select>
           </div>
-          <div class="form-line"><label for="birthday">Birthday</label><input type="date" id="birthday" required aria-label="Birthday"></div>
+          <div class="form-line"><label for="birthday">Birthday</label><input type="date" id="birthday" required aria-label="Birthday"><span id="birthday-error" class="error-message"></span></div>
           <div class="modal-buttons">
             <button type="submit" class="confirm-btn" id="confirm-add-btn">Add</button>
             <button type="button" class="confirm-btn cancel" id="close-modal-btn">Cancel</button>

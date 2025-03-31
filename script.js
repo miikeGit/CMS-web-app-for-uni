@@ -155,6 +155,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+
+  const nameInput = document.getElementById("name");
+  const surnameInput = document.getElementById("surname");
+  const birthdayInput = document.getElementById("birthday");
+
+  const nameError = document.getElementById("name-error");
+  const surnameError = document.getElementById("surname-error");
+  const birthdayError = document.getElementById("birthday-error");
+
+  const name = nameInput.value.trim();
+  const surname = surnameInput.value.trim();
+  const birthday = birthdayInput.value.trim();
+
+  const nameRegex = /^[A-Za-zА-Яа-яЁёІіЇїЄє'’ -]+$/;
+  const today = new Date().toISOString().split("T")[0];
+
+  let isValid = true;
+
+  if (!nameRegex.test(name)) {
+    nameError.textContent = "Name contains invalid characters!";
+    nameInput.classList.add("input-error");
+    isValid = false;
+  } else {
+    nameError.textContent = "";
+    nameInput.classList.remove("input-error");
+  }
+
+  if (!nameRegex.test(surname)) {
+    surnameError.textContent = "Surname contains invalid characters!";
+    surnameInput.classList.add("input-error");
+    isValid = false;
+  } else {
+    surnameError.textContent = "";
+    surnameInput.classList.remove("input-error");
+  }
+
+  if (birthday && birthday > today) {
+    birthdayError.textContent = "Date of birth cannot be in the future!";
+    birthdayInput.classList.add("input-error");
+    isValid = false;
+  } else {
+    birthdayError.textContent = "";
+    birthdayInput.classList.remove("input-error");
+  }
+
+  if (!isValid) return;
     
       const studentData = {
         id: editingStudentId || Date.now(),
