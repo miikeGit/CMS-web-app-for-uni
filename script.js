@@ -26,15 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const menuToggle = document.getElementById("nav-icon1");
   const navMenu = document.getElementById("nav-menu");
 
-  const students = [];
   let editingStudentId = null;
   let studentToDelete = null;
 
   navLinks.forEach(link => {
-    if (link.getAttribute("href") === currentPage) {
+    if (currentPage === "" && link.getAttribute("href") === "index.html") {
+        link.classList.add("active");
+    } else if (link.getAttribute("href") === currentPage) {
         link.classList.add("active");
     }
-  });
+});
   
   if (badge) badge.classList.add("hidden");
 
@@ -57,10 +58,27 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-          
         if (!confirm("Are you sure you want to delete selected students?")) return;
 
-        checkboxes.forEach(checkbox => { checkbox.closest("tr").remove(); });
+        checkboxes.forEach(checkbox => {
+          const row = checkbox.closest("tr");
+          const studentId = row.getAttribute("data-id");
+      
+          fetch('server/delete-student.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: studentId })
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                row.remove();
+              } else {
+                alert('Error deleting student: ' + data.error);
+              }
+            })
+            .catch(error => console.error('Delete error:', error));
+        });
     });
 
     selectAllCheckbox.addEventListener("change", () => {
@@ -80,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.classList.add("visible");
       modal.classList.remove("hidden");
     });
-    
 
     closeBtn.addEventListener("click", () => {
       closeModal();
@@ -95,62 +112,6 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.classList.add("hidden");
       form.reset();
       editingStudentId = null;
-    }
-
-    function addStudentToTable(student) {
-      const isOnline = student.name === "Mykhailo" && student.surname === "Malets";
-      const statusText = isOnline ? "Online" : "Offline";
-      const statusClass = isOnline ? "online" : "offline";
-    
-      const newRow = document.createElement("tr");
-      newRow.setAttribute("data-id", student.id);
-      newRow.innerHTML = `
-        <td>
-          <div class="checkbox-wrapper">
-            <input type="checkbox" class="student-checkbox" aria-label="Select">
-          </div>
-        </td>
-        <td class="group">${student.group}</td>
-        <td class="name">${student.name} ${student.surname}</td>
-        <td class="gender">${student.gender === "M" ? "Male" : "Female"}</td>
-        <td class="birthday">${student.birthday}</td>
-        <td>
-          <div class="status-wrapper">
-            <div class="dot-${statusClass}"></div>
-            <span>${statusText}</span>
-          </div>
-        </td>
-        <td>
-          <button class="datatable-btn edit-btn">Edit</button>
-          <span> | </span>
-          <button class="datatable-btn delete-btn">Delete</button>
-        </td>`;
-    
-      tableBody.appendChild(newRow);
-    
-      newRow.querySelector(".delete-btn").addEventListener("click", () => {
-        const studentName = `${student.name} ${student.surname}`;
-        studentToDelete = student.id;
-        document.getElementById("confirm-question").textContent = `Are you sure you want to delete ${studentName}?`;
-        confirmModal.classList.remove("hidden");
-        confirmModal.classList.add("visible");
-      });
-    
-      newRow.querySelector(".edit-btn").addEventListener("click", () => {
-        document.getElementById("name").value = student.name;
-        document.getElementById("surname").value = student.surname;
-        document.getElementById("group").value = student.group;
-        document.getElementById("gender").value = student.gender;
-        document.getElementById("birthday").value = student.birthday;
-    
-        editingStudentId = student.id;
-
-        document.getElementById("modal-title").textContent = "Edit Student";
-        document.getElementById("confirm-add-btn").textContent = "Save";
-    
-        modal.classList.add("visible");
-        modal.classList.remove("hidden");
-      });
     }
 
     form.addEventListener("submit", (event) => {
@@ -168,8 +129,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const surname = surnameInput.value.trim();
   const birthday = birthdayInput.value.trim();
 
-  const nameRegex = /^[A-Za-zА-Яа-яЁёІіЇїЄє'’ -]+$/;
+  // const nameRegex = /^[A-Za-zА-Яа-яЁёІіЇїЄє'’ -]+$/;
   const today = new Date().toISOString().split("T")[0];
+
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+  if (!(nameRegex.test(name) || emailRegex.test(name))) {
+    nameError.textContent = "Name must be valid or a valid email address!";
+    nameInput.classList.add("input-error");
+    isValid = false;
+  } else {
+    nameError.textContent = "";
+    nameInput.classList.remove("input-error");
+}
+
 
   let isValid = true;
 
@@ -203,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!isValid) return;
     
       const studentData = {
-        id: editingStudentId || Date.now(),
+        id: editingStudentId,
         group: document.getElementById("group").value,
         name: document.getElementById("name").value,
         surname: document.getElementById("surname").value,
@@ -212,18 +185,50 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     
       if (editingStudentId) {
-        const existingRow = document.querySelector(`tr[data-id="${editingStudentId}"]`);
-
-        if (existingRow) {
-          existingRow.querySelector(".group").textContent = studentData.group;
-          existingRow.querySelector(".name").textContent = `${studentData.name} ${studentData.surname}`;
-          existingRow.querySelector(".gender").textContent = studentData.gender === "M" ? "Male" : "Female";
-          existingRow.querySelector(".birthday").textContent = studentData.birthday;
-        }
-        console.log("Edited student data:", JSON.stringify(studentData, null, 2));
+        fetch('server/edit-student.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(studentData)
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // Update the row in the table
+              const existingRow = document.querySelector(`tr[data-id="${editingStudentId}"]`);
+              if (existingRow) {
+                existingRow.querySelector(".group").textContent = studentData.group;
+                existingRow.querySelector(".name").textContent = `${studentData.name} ${studentData.surname}`;
+                existingRow.querySelector(".gender").textContent = studentData.gender === "M" ? "Male" : "Female";
+                existingRow.querySelector(".birthday").textContent = studentData.birthday;
+              }
+              location.reload();
+            } else {
+              alert('Error editing student: ' + data.error);
+            }
+          })
+          .catch(error => console.error('Edit error:', error));
+    
         editingStudentId = null;
       } else {
-        addStudentToTable(studentData);
+        fetch('server/add-student.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(studentData),
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              console.error('Error adding student:', data.error);
+              alert(data.error);
+              return;
+            }
+      
+            location.reload();
+          })
+          .catch(error => console.error('Error:', error));
+
       }
     
       closeModal();
@@ -231,10 +236,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     confirmBtn.addEventListener("click", () => {
       if (studentToDelete) {
-        removeStudent(studentToDelete);
-        studentToDelete = null; 
+        removeStudentFromServer(studentToDelete);
+        studentToDelete = null;
       }
-      confirmModal.classList.add("hidden"); 
+      confirmModal.classList.add("hidden");
       confirmModal.classList.remove("visible");
     });
 
@@ -244,18 +249,87 @@ document.addEventListener("DOMContentLoaded", () => {
       confirmModal.classList.remove("visible");
     });
 
-    function removeStudent(id) {
-      const index = students.findIndex(student => student.id === id);
-      if (index !== -1) {
-        students.splice(index, 1);
-      }
-      document.querySelector(`tr[data-id="${id}"]`).remove();
+    function removeStudentFromServer(id) {
+      fetch('server/delete-student.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Remove the row from the table
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            if (row) row.remove();
+          } else {
+            alert('Error deleting student: ' + data.error);
+          }
+        })
+        .catch(error => console.error('Delete error:', error));
     }
+
+    fetch('server/students.php')
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          console.error('Error fetching students:', data.error);
+          return;
+        }
+  
+        data.forEach(student => {
+          const row = document.createElement('tr');
+          row.setAttribute("data-id", student.id);
+          row.innerHTML = `
+            <td>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" class="student-checkbox" aria-label="Select">
+              </div>
+            </td>
+            <td>${student.group_name}</td>
+            <td>${student.first_name} ${student.last_name}</td>
+            <td class="gender">${student.gender === "M" ? "Male" : "Female"}</td>
+            <td>${student.birthday}</td>
+            <td>${student.status}</td>
+  
+            <td>
+              <button class="datatable-btn edit-btn">Edit</button>
+                <span> | </span>
+              <button class="datatable-btn delete-btn">Delete</button>
+            </td>`;
+  
+          tableBody.appendChild(row);
+
+          row.querySelector(".delete-btn").addEventListener("click", () => {
+            const studentName = `${student.first_name} ${student.last_name}`;
+            studentToDelete = student.id;
+            document.getElementById("confirm-question").textContent = `Are you sure you want to delete ${studentName}?`;
+            confirmModal.classList.remove("hidden");
+            confirmModal.classList.add("visible");
+          });
+
+          row.querySelector(".edit-btn").addEventListener("click", () => {
+            document.getElementById("name").value = student.first_name;
+            document.getElementById("surname").value = student.last_name;
+            document.getElementById("group").value = student.group_name;
+            document.getElementById("gender").value = student.gender;
+            document.getElementById("birthday").value = student.birthday;
+        
+            editingStudentId = student.id;
+    
+            document.getElementById("modal-title").textContent = "Edit Student";
+            document.getElementById("confirm-add-btn").textContent = "Save";
+        
+            modal.classList.add("visible");
+            modal.classList.remove("hidden");
+          });
+
+        });
+      })
+      .catch(error => console.error('Error:', error));
   }
 
   menuToggle.addEventListener("click", () => {
     menuToggle.classList.toggle("open");
     navMenu.classList.toggle("active");
   });
-
 });
