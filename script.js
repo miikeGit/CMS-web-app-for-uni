@@ -64,22 +64,13 @@ document.addEventListener("DOMContentLoaded", () => {
           const row = checkbox.closest("tr");
           const studentId = row.getAttribute("data-id");
       
-          fetch('server/delete-student.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: studentId })
-          })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                row.remove();
-              } else {
-                alert('Error deleting student: ' + data.error);
-              }
-            })
-            .catch(error => console.error('Delete error:', error));
-        });
+          removeStudentFromServer(studentId);
     });
+
+    if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+    }
+  });
 
     selectAllCheckbox.addEventListener("change", () => {
       const checkboxes = tableBody.querySelectorAll("input[type='checkbox']");
@@ -129,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const surname = surnameInput.value.trim();
   const birthday = birthdayInput.value.trim();
 
-  // const nameRegex = /^[A-Za-zА-Яа-яЁёІіЇїЄє'’ -]+$/;
+  const nameRegex = /^[A-Za-zА-Яа-яЁёІіЇїЄє'’ -]+$/;
   const today = new Date().toISOString().split("T")[0];
 
   const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
@@ -185,8 +176,8 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     
       if (editingStudentId) {
-        fetch('server/edit-student.php', {
-          method: 'POST',
+        fetch(`api.php/students/${editingStudentId}`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(studentData)
         })
@@ -210,7 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
         editingStudentId = null;
       } else {
-        fetch('server/add-student.php', {
+        fetch('api.php/students', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -219,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
           .then(response => response.json())
           .then(data => {
-            if (data.error) {
+            if (!data.success) {
               console.error('Error adding student:', data.error);
               alert(data.error);
               return;
@@ -250,10 +241,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function removeStudentFromServer(id) {
-      fetch('server/delete-student.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id })
+      fetch(`api.php/students/${id}`, {
+        method: 'DELETE'
       })
         .then(response => response.json())
         .then(data => {
@@ -268,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(error => console.error('Delete error:', error));
     }
 
-    fetch('server/students.php')
+    fetch('api.php/students')
       .then(response => response.json())
       .then(data => {
         if (data.error) {
