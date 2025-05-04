@@ -14,20 +14,6 @@ const urlsToCache = [
   "https://fonts.googleapis.com/icon?family=Material+Icons"
 ];
 
-// const urlsToCache = [
-//   "/",
-//   "/service-worker.js",
-//   "/index.html",
-//   "/styles.css",
-//   "/script.js",
-//   "/dashboard.html",
-//   "/messages.html",
-//   "/tasks.html",
-//   "/icons/icon-192x192.png",
-//   "/icons/icon-512x512.png",
-//   "https://fonts.googleapis.com/icon?family=Material+Icons"
-// ];
-
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {

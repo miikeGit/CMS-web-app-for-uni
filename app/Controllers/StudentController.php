@@ -1,5 +1,4 @@
 <?php
-// filepath: d:\xampp\htdocs\PVI\app\Controllers\StudentController.php
 
 namespace App\Controllers;
 
@@ -17,16 +16,17 @@ class StudentController {
     private function sendJson($data, $statusCode = 200) {
         http_response_code($statusCode);
         header('Content-Type: application/json');
-        // Consider adding CORS headers here if needed globally,
-        // or manage them in a central router/middleware later.
-        // header('Access-Control-Allow-Origin: *'); // Be cautious with '*' in production
         echo json_encode($data);
         exit;
     }
 
     public function index() {
+
+        $page = $_GET['page'] ?? 1;
+        $limit = $_GET['limit'] ?? 6;
+
         try {
-            $students = $this->studentModel->getAll();
+            $students = $this->studentModel->getAll($page, $limit);
             $this->sendJson($students);
         } catch (PDOException $e) {
             $this->sendJson(['error' => 'Database error: ' . $e->getMessage()], 500);
@@ -44,15 +44,13 @@ class StudentController {
         try {
             $result = $this->studentModel->add($data);
             if ($result) {
-                $this->sendJson(['success' => 'Student added successfully.'], 201); // 201 Created
+                $this->sendJson(['success' => 'Student added successfully.'], 201);
             } else {
-                // This case might not be reached if execute throws an exception on failure
                 $this->sendJson(['error' => 'Failed to add student.'], 500);
             }
         } catch (InvalidArgumentException $e) {
-            $this->sendJson(['error' => $e->getMessage()], 400); // Bad Request
+            $this->sendJson(['error' => $e->getMessage()], 400);
         } catch (PDOException $e) {
-            // Check for specific SQL errors like duplicates if needed
             $this->sendJson(['error' => 'Database error: ' . $e->getMessage()], 500);
         }
     }
@@ -64,7 +62,6 @@ class StudentController {
              $this->sendJson(['error' => 'Invalid JSON input.'], 400);
              return;
          }
-         // Add the id from the URL path to the data array
          $data['id'] = $id;
 
          try {
@@ -72,8 +69,7 @@ class StudentController {
              if ($affectedRows > 0) {
                  $this->sendJson(['success' => true, 'message' => 'Student updated successfully.']);
              } else {
-                 // Could be no changes were made or student not found
-                 $this->sendJson(['success' => false, 'error' => 'No changes made or student not found.'], 404); // Or 200 OK if no change is not an error
+                 $this->sendJson(['success' => false, 'error' => 'No changes made or student not found.'], 404);
              }
          } catch (InvalidArgumentException $e) {
              $this->sendJson(['success' => false, 'error' => $e->getMessage()], 400);
@@ -88,12 +84,11 @@ class StudentController {
             if ($affectedRows > 0) {
                 $this->sendJson(['success' => true, 'message' => 'Student deleted successfully.']);
             } else {
-                $this->sendJson(['success' => false, 'error' => 'Student not found.'], 404); // Not Found
+                $this->sendJson(['success' => false, 'error' => 'Student not found.'], 404);
             }
         } catch (InvalidArgumentException $e) {
             $this->sendJson(['success' => false, 'error' => $e->getMessage()], 400);
         } catch (PDOException $e) {
-            // Handle potential foreign key constraints if necessary
             $this->sendJson(['success' => false, 'error' => 'Database error: ' . $e->getMessage()], 500);
         }
     }

@@ -16,14 +16,15 @@
   <header class="header">
     <h1><a href="index.html" class="logo-link">CMS</a></h1>
 
-    <nav class="nav" id="nav-menu">
+    <nav class="nav requires-auth" style="display: none;" id="nav-menu">
       <a href="dashboard.html" id="nav-dashboard">Dashboard</a>
       <a href="index.html" id="nav-students">Students</a>
       <a href="tasks.html" id="nav-tasks">Tasks</a>
     </nav>
 
     <div class="header-right">
-      <div class="dropdown">
+      <button id="login-btn" class="button-common" style="position: static; background-color: #538ac6;">Log In</button>
+      <div class="dropdown requires-auth" style="display: none;">
         <a href="messages.html" class="dropdown-btn bell-icon">
           <span class="material-icons">notifications</span>
           <span class="badge" id="badge">3</span>
@@ -53,12 +54,12 @@
         </div>
       </div>
   
-      <div class="dropdown">
+      <div class="dropdown requires-auth" style="display: none;">
         <button class="dropdown-btn"><span class="material-icons">account_circle</span></button>
         <div class="dropdown-content profile-content">
           <ul>
             <li><a href="#">Profile</a></li>
-            <li><a href="#">Sign Out</a></li>
+            <li><a href="#" id="logout-link">Sign Out</a></li>
           </ul>
         </div>
       </div>
@@ -74,9 +75,9 @@
 
   <div class="main">
     <div class="datatable-container">
-      <button class="button-common add-student-btn" id="add-student-btn"><i class="material-icons">add</i></button>
-      <button class="button-common delete-student-btn" id="delete-selected-btn"><i class="material-icons">delete</i></button>
-      
+      <button class="button-common add-student-btn requires-auth" id="add-student-btn"><i class="material-icons">add</i></button>
+      <button class="button-common delete-student-btn requires-auth" id="delete-selected-btn" style="display: none;"><i class="material-icons">delete</i></button>
+
       <table class="datatable" id="students-table">
         <caption> Students </caption>
         <thead>
@@ -97,6 +98,10 @@
         </thead>
         <tbody id="students-table-body"></tbody>
       </table>
+
+      <div class="pagination-container" id="pagination-controls">
+        <!-- Pagination buttons will be generated here by JavaScript -->
+      </div>
     </div>
 
     <div class="modal-wrapper hidden" id="confirm-deletion">
@@ -138,6 +143,29 @@
         </form>
       </div>
     </div>  
+  </div>
+
+
+    <div class="modal-wrapper hidden" id="login-modal">
+      <div class="modal">
+        <h3>Log In</h3>
+        <form id="login-form">
+          <div id="login-error" class="error-message" style="display: none; margin-bottom: 10px;"></div>
+          <div class="form-line">
+            <label for="login-username">Username (First Name)</label>
+            <input type="text" id="login-username" required aria-label="Username">
+          </div>
+          <div class="form-line">
+            <label for="login-password">Password (Birthday)</label>
+            <input type="date" id="login-password" required aria-label="Password">
+          </div>
+          <div class="modal-buttons">
+            <button type="submit" class="confirm-btn" id="confirm-login-btn">Log In</button>
+            <button type="button" class="confirm-btn cancel" id="cancel-login-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </body>
 </html>

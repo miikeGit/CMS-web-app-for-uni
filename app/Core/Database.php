@@ -1,5 +1,4 @@
 <?php
-// filepath: d:\xampp\htdocs\PVI\app\Core\Database.php
 
 namespace App\Core;
 
@@ -22,7 +21,6 @@ class Database {
         try {
             $this->pdo = new PDO($dsn, $this->config['username'], $this->config['password'], $options);
         } catch (PDOException $e) {
-            // In a real app, log this error instead of echoing
             echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
             exit;
         }
@@ -39,7 +37,6 @@ class Database {
         return $this->pdo;
     }
 
-    // Prevent cloning and unserialization
     private function __clone() {}
     public function __wakeup() {}
 }
