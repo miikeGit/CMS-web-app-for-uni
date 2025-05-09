@@ -1,11 +1,11 @@
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("./service-worker.js")
-      .then(() => console.log("Service Worker registered"))
-      .catch((err) => console.log("Service Worker registration failed:", err));
-  });
-}
+// if ("serviceWorker" in navigator) {
+//   window.addEventListener("load", () => {
+//     navigator.serviceWorker
+//       .register("./service-worker.js")
+//       .then(() => console.log("Service Worker registered"))
+//       .catch((err) => console.log("Service Worker registration failed:", err));
+//   });
+// }
 
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("login-btn");
@@ -38,6 +38,613 @@ document.addEventListener("DOMContentLoaded", () => {
   let editingStudentId = null;
   let studentToDelete = null;
   let currentUser = null;
+  let chatSocket = null;
+  let currentMongoUserId = null; // Зберігатиме ID користувача з MongoDB
+  let activeChatRoomId = null; // ID активної відкритої чат-кімнати
+
+    function initializeChatSocket() {
+        // Підключаємося до Node.js/Socket.IO сервера
+        // Переконайтеся, що порт відповідає тому, що в server.js
+        chatSocket = io("http://localhost:3000", {
+            withCredentials: true
+        });
+
+        chatSocket.on('connect', () => {
+            console.log('Connected to chat server with ID:', chatSocket.id);
+            // Після підключення, якщо користувач залогінений, автентифікуємо його на чат-сервері
+            if (currentUser && currentUser.id && currentUser.name) { // currentUser з вашої PHP автентифікації
+                const nameParts = currentUser.name.split(' ');
+                chatSocket.emit('authenticate', {
+                    phpStudentId: currentUser.id, // ID з PHP бази
+                    firstName: nameParts[0] || 'Unknown',
+                    lastName: nameParts.slice(1).join(' ') || 'User'
+                });
+            }
+        });
+
+        chatSocket.on('authenticated', (data) => {
+            console.log(data.message);
+            currentMongoUserId = data.mongoUserId; // Зберігаємо ID з MongoDB
+            // Завантажити список чатів користувача
+            if (isMessagesPage()) { // Перевірка, чи ми на сторінці messages.html
+                 chatSocket.emit('loadChatRooms', { userPhpStudentId: currentUser.id });
+            }
+        });
+
+        chatSocket.on('authError', (data) => {
+            console.error('Chat authentication error:', data.message);
+            // Можна показати помилку користувачу
+        });
+
+        chatSocket.on('chatError', (data) => {
+            console.error('Chat Error:', data.message);
+            alert(`Chat Error: ${data.message}`); // Простий alert для помилок
+        });
+
+        // Обробка отримання списку чатів
+        chatSocket.on('chatRoomsList', (chatRooms) => {
+            console.log('Received chat rooms:', chatRooms);
+            if (isMessagesPage()) {
+                renderChatList(chatRooms); // Функція для відображення списку чатів
+            }
+        });
+
+        // Обробка створення нової кімнати
+        chatSocket.on('newChatRoomCreated', (newChatRoom) => {
+            console.log('New chat room created:', newChatRoom);
+            if (isMessagesPage()) {
+                // Додати новий чат до списку або оновити список
+                chatSocket.emit('loadChatRooms', { userPhpStudentId: currentUser.id });
+                // Якщо новий чат - це той, що щойно створили, можна його активувати
+                // Наприклад, якщо ми передавали якийсь temporaryId і він повернувся
+            }
+            // Можна показати сповіщення
+        });
+         chatSocket.on('chatRoomExists', (existingChatRoom) => {
+            console.log('Chat room already exists:', existingChatRoom);
+            if (isMessagesPage()) {
+                // Можливо, підсвітити існуючий чат або перейти до нього
+                const chatItem = document.querySelector(`.chat-item[data-room-id="${existingChatRoom._id}"]`);
+                if (chatItem) {
+                    chatItem.click(); // Активувати існуючий чат
+                } else {
+                    // Якщо чату немає в списку, перезавантажити список
+                    chatSocket.emit('loadChatRooms', { userPhpStudentId: currentUser.id });
+                }
+            }
+        });
+
+
+        // Обробка додавання користувачів до чату
+        chatSocket.on('usersAddedToChat', ({ chatRoomId, updatedRoom }) => {
+            console.log(`Users added to chat ${chatRoomId}`, updatedRoom);
+            if (isMessagesPage() && activeChatRoomId === chatRoomId) {
+                // Оновити інформацію про учасників в активному чаті
+                renderChatMembers(updatedRoom.participants); // Функція для відображення учасників
+            }
+            // Оновити список чатів, якщо потрібно (наприклад, якщо змінилась назва або останнє повідомлення)
+            // або просто оновити кількість учасників, якщо відображається
+            chatSocket.emit('loadChatRooms', { userPhpStudentId: currentUser.id });
+        });
+
+
+        // Обробка нового повідомлення
+        chatSocket.on('newMessage', (message) => {
+            console.log('New message received:', message);
+            if (isMessagesPage() && message.chatRoomId === activeChatRoomId) {
+                appendMessageToChat(message); // Функція для додавання повідомлення в активний чат
+            } else {
+                // Якщо чат не активний, можна показати лічильник непрочитаних або інше сповіщення
+                // Це вже обробляється через 'notification'
+            }
+            // Оновити lastMessage в списку чатів
+            updateChatListItemWithLastMessage(message.chatRoomId, message);
+        });
+
+        // Обробка завантаження історії чату
+        chatSocket.on('chatHistory', ({ chatRoomId, messages }) => {
+            console.log(`History for chat ${chatRoomId}:`, messages);
+            if (isMessagesPage() && chatRoomId === activeChatRoomId) {
+                renderChatMessages(messages); // Функція для відображення історії повідомлень
+            }
+        });
+
+        // Обробка зміни статусу користувача
+        chatSocket.on('userStatusChanged', ({ phpStudentId, status, userId }) => {
+            console.log(`User ${phpStudentId} (mongoId: ${userId}) is now ${status}`);
+            if (isMessagesPage()) {
+                updateUserStatusInUI(phpStudentId, status, userId); // Функція для оновлення статусу в UI
+            }
+        });
+
+        // Обробка сповіщень (дзвіночок)
+        chatSocket.on('notification', ({ message, chatRoomId, chatRoomName }) => {
+            console.log('Received notification:', message);
+            // Перевірка, чи користувач НЕ в цьому чаті і НЕ на сторінці messages з цим активним чатом
+            const onMessagesPage = isMessagesPage();
+            const isChatActive = activeChatRoomId === chatRoomId;
+
+            if (!onMessagesPage || (onMessagesPage && !isChatActive)) {
+                if (bellIcon && badge) {
+                    bellIcon.classList.add("shake-animation");
+                    badge.classList.remove("hidden");
+                    badge.textContent = parseInt(badge.textContent || "0") + 1;
+                    setTimeout(() => {
+                        bellIcon.classList.remove("shake-animation");
+                    }, 800);
+                }
+                // Додати повідомлення до випадаючого списку сповіщень
+                addNotificationToList(message, chatRoomId, chatRoomName);
+            }
+        });
+
+
+        chatSocket.on('disconnect', () => {
+            console.log('Disconnected from chat server');
+        });
+    }
+
+    // --- Допоміжні функції для UI чату ---
+    function isMessagesPage() {
+        return window.location.pathname.endsWith('messages.html');
+    }
+
+    function renderChatList(chatRooms) {
+        const chatListUl = document.querySelector('.chat-sidebar .chat-list');
+        if (!chatListUl) return;
+        chatListUl.innerHTML = ''; // Очистити список
+
+        chatRooms.forEach(room => {
+            const li = document.createElement('li');
+            li.classList.add('chat-item');
+            li.setAttribute('data-room-id', room._id);
+
+            let displayName = room.name;
+            let otherUserPhpId = null;
+
+            if (!room.isGroupChat && room.participants.length === 2) {
+                const otherParticipant = room.participants.find(p => p.phpStudentId !== currentUser.id);
+                if (otherParticipant) {
+                    displayName = `${otherParticipant.firstName} ${otherParticipant.lastName}`;
+                    otherUserPhpId = otherParticipant.phpStudentId;
+                } else {
+                     // Це може бути чат, де поточний користувач - єдиний учасник (рідко, але можливо)
+                     // або щось пішло не так з даними учасників
+                     const self = room.participants.find(p => p.phpStudentId === currentUser.id);
+                     if(self) displayName = self.firstName + " (Self)";
+                     else displayName = room.name; // Fallback
+                }
+            }
+
+            // Виділення профілю поточного користувача (якщо це чат з самим собою або особливий стиль для "Admin")
+            let specialStyle = '';
+            if (currentUser && room.participants.some(p => p.phpStudentId === currentUser.id && p.firstName.toLowerCase() === "admin")) {
+                //  specialStyle = 'font-weight: bold; color: var(--color-accent-primary);'; // Приклад
+            }
+             // Якщо це чат, де поточний користувач є "Admin", можна його виділити
+            const isAdminChat = room.participants.some(p => p.phpStudentId === currentUser.id && p.firstName === "Admin" && p.lastName === ""); // Припускаючи, що Admin не має прізвища або воно порожнє
+            if (isAdminChat) {
+                // li.style.backgroundColor = 'var(--color-background-light)'; // Приклад виділення
+            }
+
+
+            li.innerHTML = `
+                <span class="material-icons user-avatar-icon">account_circle</span>
+                <div class="chat-item-details">
+                    <span class="chat-name" style="${specialStyle}">${escapeHTML(displayName)}</span>
+                    ${room.lastMessage ? `<small class="last-message-preview">${escapeHTML(room.lastMessage.senderId.firstName)}: ${truncateText(escapeHTML(room.lastMessage.content), 20)}</small>` : '<small class="last-message-preview">No messages yet.</small>'}
+                </div>
+            `;
+            if (activeChatRoomId === room._id) {
+                li.classList.add('active');
+            }
+
+            li.addEventListener('click', () => {
+                if (activeChatRoomId === room._id && document.querySelector('.chat-main .chat-header-main h3').textContent === displayName) return;
+
+                const currentActive = chatListUl.querySelector('.chat-item.active');
+                if (currentActive) currentActive.classList.remove('active');
+                li.classList.add('active');
+
+                activeChatRoomId = room._id;
+                const chatHeaderMainH3 = document.querySelector('.chat-main .chat-header-main h3');
+                if(chatHeaderMainH3) chatHeaderMainH3.textContent = displayName;
+                else {
+                    const headerDiv = document.querySelector('.chat-main .chat-header-main');
+                    if(headerDiv) headerDiv.innerHTML = `<h3>${escapeHTML(displayName)}</h3>`; // Створюємо h3, якщо його немає
+                }
+
+                chatSocket.emit('loadChatHistory', { chatRoomId: room._id });
+                renderChatMembers(room.participants);
+                clearMessageInput();
+                document.querySelector('.chat-main').style.display = 'flex'; // Показати область чату
+            });
+            chatListUl.appendChild(li);
+        });
+         if (chatRooms.length === 0) {
+            chatListUl.innerHTML = '<li class="no-chats-message">No chats available. Create a new one!</li>';
+        }
+    }
+
+    function truncateText(text, maxLength) {
+        if (!text) return '';
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
+
+    function renderChatMembers(participants) {
+        const membersDiv = document.querySelector('.chat-main .member-avatars');
+        if (!membersDiv) return;
+        membersDiv.innerHTML = '';
+
+        participants.forEach(p => {
+            const avatarSpan = document.createElement('span');
+            avatarSpan.classList.add('material-icons', 'user-avatar-icon', 'small');
+            avatarSpan.textContent = 'account_circle';
+            avatarSpan.title = `${p.firstName} ${p.lastName} (${p.status})`;
+            avatarSpan.setAttribute('data-user-mongo-id', p._id); // Для оновлення статусу
+            if (p.phpStudentId === currentUser.id) {
+                avatarSpan.style.border = `3px solid var(--color-accent-primary)`; // Виділення поточного користувача
+                avatarSpan.style.borderRadius = "100px";
+                avatarSpan.title += " (You)";
+            }
+            if (p.status === 'online') {
+                avatarSpan.classList.add('online');
+            } else {
+                avatarSpan.classList.add('offline');
+            }
+            membersDiv.appendChild(avatarSpan);
+        });
+
+        const addBtn = document.createElement('button');
+        addBtn.classList.add('add-member-btn');
+        addBtn.innerHTML = `<i class="material-icons">add_circle_outline</i>`;
+        addBtn.title = "Add members to chat";
+        addBtn.addEventListener('click', () => {
+            console.log('Open add member modal for chat:', activeChatRoomId);
+            openAddUsersToChatModal(activeChatRoomId, participants.map(p => p.phpStudentId));
+        });
+        membersDiv.appendChild(addBtn);
+    }
+
+    function renderChatMessages(messages) {
+        const messagesUl = document.querySelector('.chat-main .message-list-main');
+        if (!messagesUl) return;
+        messagesUl.innerHTML = '';
+
+        if (messages && messages.length > 0) {
+            messages.forEach(msg => {
+                appendMessageToChat(msg, false);
+            });
+        } else {
+            messagesUl.innerHTML = '<li class="no-messages">No messages in this chat yet.</li>';
+        }
+        scrollToBottom(messagesUl);
+    }
+
+    function appendMessageToChat(message, shouldScroll = true) {
+        const messagesUl = document.querySelector('.chat-main .message-list-main');
+        if (!messagesUl) return;
+
+        // Видалити "No messages yet" якщо воно є
+        const noMessagesLi = messagesUl.querySelector('.no-messages');
+        if (noMessagesLi) noMessagesLi.remove();
+
+        const li = document.createElement('li');
+        li.classList.add('message');
+        // Перевіряємо чи існує message.senderId перед тим як доступатись до його властивостей
+        const senderIsCurrentUser = message.senderId && message.senderId.phpStudentId === currentUser.id;
+        li.classList.add(senderIsCurrentUser ? 'sent' : 'received');
+
+        const senderName = message.senderId ? (senderIsCurrentUser ? 'Me' : `${message.senderId.firstName} ${message.senderId.lastName}`) : 'Unknown User';
+        const profileStyle = (message.senderId && message.senderId.phpStudentId === currentUser.id) ? 'style="font-weight: bold; color: var(--color-accent-primary);"' : '';
+
+
+        li.innerHTML = `
+            <div class="message-content">
+                <p>${escapeHTML(message.content)}</p>
+                <span class="message-timestamp">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+        `;
+        messagesUl.appendChild(li);
+        if (shouldScroll) {
+            scrollToBottom(messagesUl);
+        }
+    }
+
+    function escapeHTML(str) {
+        if (typeof str !== 'string') return '';
+        return str.replace(/[&<>"']/g, function (match) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[match];
+        });
+    }
+
+
+    function scrollToBottom(element) {
+        if (element) {
+            element.scrollTop = element.scrollHeight;
+        }
+    }
+
+    function clearMessageInput() {
+        const inputField = document.querySelector('.message-input-form input[type="text"]');
+        if (inputField) inputField.value = '';
+    }
+
+    function updateUserStatusInUI(phpStudentId, status, userId) {
+        // Оновлення статусу в списку чатів (крапка біля імені)
+        const chatListItems = document.querySelectorAll(`.chat-sidebar .chat-list .chat-item`);
+        chatListItems.forEach(item => {
+            const statusDot = item.querySelector(`.user-status-dot[data-user-php-id="${phpStudentId}"]`);
+            if (statusDot) {
+                statusDot.className = `user-status-dot ${status === 'online' ? 'dot-online' : 'dot-offline'}`;
+            }
+        });
+
+        // Оновлення статусу в списку учасників активного чату
+        if (activeChatRoomId) {
+            const memberAvatar = document.querySelector(`.chat-main .member-avatars .user-avatar-icon[data-user-mongo-id="${userId}"]`);
+            if (memberAvatar) {
+                memberAvatar.classList.remove('online', 'offline');
+                memberAvatar.classList.add(status); // 'online' or 'offline'
+                // Оновити title, якщо потрібно
+                const currentTitle = memberAvatar.title;
+                const namePart = currentTitle.substring(0, currentTitle.lastIndexOf('(')).trim();
+                memberAvatar.title = `${namePart} (${status})`;
+            }
+        }
+    }
+
+    function updateChatListItemWithLastMessage(chatRoomId, message) {
+        const chatItem = document.querySelector(`.chat-sidebar .chat-list .chat-item[data-room-id="${chatRoomId}"]`);
+        if (chatItem) {
+            let previewElement = chatItem.querySelector('.last-message-preview');
+            if (!previewElement) {
+                previewElement = document.createElement('small');
+                previewElement.classList.add('last-message-preview');
+                const detailsDiv = chatItem.querySelector('.chat-item-details');
+                if (detailsDiv) {
+                    detailsDiv.appendChild(previewElement);
+                } else {
+                    chatItem.appendChild(previewElement);
+                }
+            }
+            const senderName = message.senderId ? message.senderId.firstName : "Unknown";
+            previewElement.textContent = `${escapeHTML(senderName)}: ${truncateText(escapeHTML(message.content), 20)}`;
+
+            const chatListUl = chatItem.parentNode;
+            if (chatListUl && chatListUl.firstChild !== chatItem) {
+                chatListUl.insertBefore(chatItem, chatListUl.firstChild);
+            }
+        }
+    }
+
+
+    function addNotificationToList(message, chatRoomId, chatRoomName) {
+        const notificationsListUl = document.querySelector('.notifications-content .messages-list');
+        if (!notificationsListUl) return;
+
+        const li = document.createElement('li');
+        li.setAttribute('data-chatroom-id', chatRoomId);
+        const senderName = message.senderId ? `${message.senderId.firstName} ${message.senderId.lastName}` : 'Unknown User';
+        li.innerHTML = `
+            <span class="material-icons">chat_bubble_outline</span>
+            <div class="message-text">
+                <strong>${escapeHTML(senderName)} (in ${escapeHTML(chatRoomName)})</strong>
+                <p>${truncateText(escapeHTML(message.content), 30)}</p>
+            </div>
+            <span class="time">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        `;
+        li.addEventListener('click', () => {
+            window.location.href = `messages.html?chatId=${chatRoomId}`;
+        });
+
+        if (notificationsListUl.firstChild) {
+            notificationsListUl.insertBefore(li, notificationsListUl.firstChild);
+        } else {
+            notificationsListUl.appendChild(li);
+        }
+        while (notificationsListUl.children.length > 5) {
+            notificationsListUl.removeChild(notificationsListUl.lastChild);
+        }
+    }
+
+
+    // Обробник для форми відправки повідомлення
+    const messageForm = document.querySelector('.message-input-form');
+    if (messageForm && isMessagesPage()) {
+        messageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = messageForm.querySelector('input[type="text"]');
+            const content = input.value.trim();
+            if (content && activeChatRoomId && currentUser && currentUser.id) {
+                chatSocket.emit('sendMessage', {
+                    chatRoomId: activeChatRoomId,
+                    senderPhpStudentId: currentUser.id,
+                    content: content
+                });
+                input.value = '';
+            }
+        });
+    }
+
+    // Обробник для кнопки "New chat room"
+    const newChatBtn = document.querySelector('.new-chat-btn');
+    if (newChatBtn && isMessagesPage()) {
+        newChatBtn.addEventListener('click', () => {
+            console.log('Open new chat room modal');
+            openCreateChatModal();
+        });
+    }
+
+    let allStudentsCache = []; // Кеш для списку студентів
+
+    async function fetchAllStudentsForChatModal() {
+        if (allStudentsCache.length > 0) {
+            return allStudentsCache;
+        }
+        try {
+            // Припускаємо, що ваш PHP API може повернути всіх студентів без пагінації
+            // Або ви можете додати спеціальний ендпоінт /api.php/students/all
+            const response = await fetch('api.php/students?limit=1000', { credentials: 'include' }); // Запит на велику кількість
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            allStudentsCache = data.students || [];
+            return allStudentsCache;
+        } catch (error) {
+            console.error("Failed to fetch students for chat modal:", error);
+            return [];
+        }
+    }
+
+async function openCreateChatModal() {
+        const students = await fetchAllStudentsForChatModal();
+        if (students.length === 0) {
+            alert("No students available to create a chat or failed to load students.");
+            return;
+        }
+
+        // Створення HTML для модального вікна
+        const modalId = 'createChatModal';
+        let existingModal = document.getElementById(modalId);
+        if (existingModal) existingModal.remove(); // Видалити старе модальне, якщо є
+
+        const modalWrapper = document.createElement('div');
+        modalWrapper.classList.add('modal-wrapper', 'visible');
+        modalWrapper.id = modalId;
+
+        let studentOptionsHtml = students
+            .filter(student => student.id !== currentUser.id) // Не показувати поточного користувача
+            .map(student => `
+                <div>
+                    <input type="checkbox" id="student-${student.id}" name="chatParticipants" value="${student.id}">
+                    <label for="student-${student.id}">${escapeHTML(student.first_name)} ${escapeHTML(student.last_name)}</label>
+                </div>
+            `).join('');
+
+        if (!studentOptionsHtml) {
+             studentOptionsHtml = "<p>No other students available to start a chat with.</p>";
+        }
+
+        modalWrapper.innerHTML = `
+            <div class="modal">
+                <h3>Create New Chat</h3>
+                <div class="form-line">
+                    <label for="chatNameInput">Chat Name (optional for group chats)</label>
+                    <input type="text" id="chatNameInput" placeholder="E.g., Project Group">
+                </div>
+                <h4>Select Participants:</h4>
+                <div id="chatParticipantList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+                    ${studentOptionsHtml}
+                </div>
+                <div class="modal-buttons">
+                    <button id="confirmCreateChatBtn" class="confirm-btn">Create</button>
+                    <button id="cancelCreateChatBtn" class="confirm-btn cancel">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalWrapper);
+
+        document.getElementById('cancelCreateChatBtn').addEventListener('click', () => {
+            modalWrapper.remove();
+        });
+
+        document.getElementById('confirmCreateChatBtn').addEventListener('click', () => {
+            const selectedInputs = document.querySelectorAll('#chatParticipantList input[name="chatParticipants"]:checked');
+            const participantPhpStudentIds = Array.from(selectedInputs).map(input => parseInt(input.value));
+            const chatName = document.getElementById('chatNameInput').value.trim();
+
+            if (participantPhpStudentIds.length === 0) {
+                alert("Please select at least one participant.");
+                return;
+            }
+
+            chatSocket.emit('createChatRoom', {
+                name: chatName || null, // Надсилати null, якщо порожньо, сервер згенерує назву для приватних
+                participantPhpStudentIds: participantPhpStudentIds,
+                createdByPhpStudentId: currentUser.id
+            });
+            modalWrapper.remove();
+        });
+    }
+
+    async function openAddUsersToChatModal(chatRoomId, existingParticipantPhpIds) {
+        const students = await fetchAllStudentsForChatModal();
+        if (students.length === 0) {
+            alert("No students available to add or failed to load students.");
+            return;
+        }
+
+        const modalId = 'addUsersToChatModal';
+        let existingModal = document.getElementById(modalId);
+        if (existingModal) existingModal.remove();
+
+        const modalWrapper = document.createElement('div');
+        modalWrapper.classList.add('modal-wrapper', 'visible');
+        modalWrapper.id = modalId;
+
+        const studentOptionsHtml = students
+            .filter(student => !existingParticipantPhpIds.includes(student.id) && student.id !== currentUser.id)
+            .map(student => `
+                <div>
+                    <input type="checkbox" id="addUser-${student.id}" name="usersToAdd" value="${student.id}">
+                    <label for="addUser-${student.id}">${escapeHTML(student.first_name)} ${escapeHTML(student.last_name)}</label>
+                </div>
+            `).join('');
+
+        modalWrapper.innerHTML = `
+            <div class="modal">
+                <h3>Add Users to Chat</h3>
+                <div id="addUserList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+                    ${studentOptionsHtml || "<p>No new users to add.</p>"}
+                </div>
+                <div class="modal-buttons">
+                    <button id="confirmAddUsersBtn" class="confirm-btn" ${!studentOptionsHtml ? 'disabled' : ''}>Add</button>
+                    <button id="cancelAddUsersBtn" class="confirm-btn cancel">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalWrapper);
+
+        document.getElementById('cancelAddUsersBtn').addEventListener('click', () => {
+            modalWrapper.remove();
+        });
+
+        document.getElementById('confirmAddUsersBtn').addEventListener('click', () => {
+            const selectedInputs = document.querySelectorAll('#addUserList input[name="usersToAdd"]:checked');
+            const usersToAddPhpStudentIds = Array.from(selectedInputs).map(input => parseInt(input.value));
+
+            if (usersToAddPhpStudentIds.length === 0) {
+                alert("Please select users to add.");
+                return;
+            }
+
+            chatSocket.emit('addUsersToChat', {
+                chatRoomId,
+                usersToAddPhpStudentIds
+            });
+            modalWrapper.remove();
+        });
+    }
+
+
+    function setupChatIfLoggedIn() {
+        if (currentUser && currentUser.id && !chatSocket) {
+            initializeChatSocket();
+        } else if (!currentUser && chatSocket) {
+            chatSocket.disconnect();
+            chatSocket = null;
+            console.log('User logged out, chat socket disconnected.');
+        }
+    }
 
   let currentPage = 1;
   const itemsPerPage = 6;
@@ -66,17 +673,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function checkAuthentication() {
     fetch('api.php/auth/check', { credentials: 'include' })
-      .then(response => response.json())
-      .then(data => {
-        currentUser = data.loggedIn ? data.user : null;
-        updateUI(data.loggedIn); 
-      })
-      .catch(error => {
-        console.error("Error checking auth:", error);
-        currentUser = null;
-        updateUI(false);
-      });
-  }
+        .then(response => response.json())
+        .then(data => {
+            const previousLoginStatus = !!currentUser;
+            currentUser = data.loggedIn ? data.user : null;
+            updateUI(data.loggedIn); // Оновлює UI синхронно
+
+            // Ініціалізувати або закрити сокет залежно від статусу логіну
+            setupChatIfLoggedIn();
+
+            // Якщо користувач щойно залогінився і ми на сторінці повідомлень,
+            // а сокет вже підключений, завантажуємо чати
+            if (data.loggedIn && !previousLoginStatus && isMessagesPage() && chatSocket && chatSocket.connected) {
+                 chatSocket.emit('loadChatRooms', { userPhpStudentId: currentUser.id });
+            }
+
+            // Перевірка URL на chatId при завантаженні сторінки messages
+            if (isMessagesPage() && data.loggedIn) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const chatIdFromUrl = urlParams.get('chatId');
+                if (chatIdFromUrl) {
+                    // Затримка, щоб дати час списку чатів завантажитися
+                    setTimeout(() => {
+                        const chatItemToActivate = document.querySelector(`.chat-item[data-room-id="${chatIdFromUrl}"]`);
+                        if (chatItemToActivate) {
+                            chatItemToActivate.click(); // Симулювати клік для відкриття чату
+                        } else {
+                            console.warn(`Chat item with ID ${chatIdFromUrl} not found in the list.`);
+                        }
+                        // Видалити параметр з URL, щоб уникнути повторного відкриття при оновленні
+                        history.replaceState(null, '', window.location.pathname);
+                    }, 1000); // Час затримки можна налаштувати
+                }
+            }
+
+
+        })
+        .catch(error => {
+            console.error("Error checking auth:", error);
+            currentUser = null;
+            updateUI(false);
+            setupChatIfLoggedIn(); // Закрити сокет, якщо помилка автентифікації
+        });
+}
 
   if (loginBtn) {
       loginBtn.addEventListener("click", () => {

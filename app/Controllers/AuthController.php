@@ -9,7 +9,7 @@ class AuthController {
     private $studentModel;
 
     public function __construct() {
-        if (session_status() == PHP_SESSION_NONE) { 
+        if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
         $this->studentModel = new Student();
@@ -30,17 +30,28 @@ class AuthController {
             return;
         }
 
-        $username = $data['username'];
-        $password = $data['password'];
+        $fullNameFromInput = trim($data['username']); // Trim whitespace
+        $password = $data['password']; // This is the birthday
+
+        // Split the full name from input into first and last names
+        // The '2' limit ensures that if there are more spaces, they become part of the last name
+        $nameParts = explode(' ', $fullNameFromInput, 2);
+        $inputFirstName = $nameParts[0];
+        $inputLastName = isset($nameParts[1]) ? $nameParts[1] : '';
 
         try {
             $pdo = $this->studentModel->getPdoConnection();
-            $stmt = $pdo->prepare("SELECT id, first_name, last_name FROM students WHERE first_name = :username AND birthday = :password LIMIT 1");
-            $stmt->execute([':username' => $username, ':password' => $password]);
+            $stmt = $pdo->prepare("SELECT id, first_name, last_name FROM students WHERE first_name = :inputFirstName AND last_name = :inputLastName AND birthday = :password LIMIT 1");
+            $stmt->execute([
+                ':inputFirstName' => $inputFirstName,
+                ':inputLastName' => $inputLastName,
+                ':password' => $password
+            ]);
             $user = $stmt->fetch();
 
             if ($user) {
                 $_SESSION['user_id'] = $user['id'];
+                // Use the names fetched from DB for consistency, as they are confirmed to be correct
                 $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
                 $this->sendJson(['success' => true, 'user' => ['id' => $user['id'], 'name' => $_SESSION['user_name']]]);
             } else {

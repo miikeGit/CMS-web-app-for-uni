@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="script.js" defer></script>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <title>Messages - CMS</title>
 </head>
@@ -72,75 +73,20 @@
           <h3>Chat room</h3>
           <button class="button-common new-chat-btn"><i class="material-icons">add</i>New chat room</button>
         </div>
-        <ul class="chat-list">
-          <li class="chat-item active">
-            <span class="material-icons user-avatar-icon">account_circle</span>
-            <span class="chat-name">Admin</span>
-          </li>
-          <li class="chat-item">
-            <span class="material-icons user-avatar-icon">account_circle</span>
-            <span class="chat-name">Ann Smith</span>
-          </li>
-          <li class="chat-item">
-            <span class="material-icons user-avatar-icon">account_circle</span>
-            <span class="chat-name">John Bond</span>
-          </li>
-          <li class="chat-item">
-            <span class="material-icons user-avatar-icon">account_circle</span>
-            <span class="chat-name">Ivon Stan</span>
-          </li>
-        </ul>
+        <ul class="chat-list"></ul>
       </aside>
       <section class="chat-main">
         <div class="chat-header-main"></div>
         <div class="chat-members">
           <h4>Members</h4>
           <div class="member-avatars">
-            <span class="material-icons user-avatar-icon small">account_circle</span>
-            <span class="material-icons user-avatar-icon small">account_circle</span>
-            <span class="material-icons user-avatar-icon small">account_circle</span>
             <button class="add-member-btn"><i class="material-icons">add_circle_outline</i></button>
           </div>
         </div>
         <div class="chat-messages-area">
           <h4>Messages</h4>
           <ul class="message-list-main">
-            <li class="message received">
-              <div class="message-sender-avatar">
-                <span class="material-icons user-avatar-icon">account_circle</span>
-                <span class="message-sender-name">Admin</span>
-              </div>
-              <div class="message-content">
-                <p>This is a message from the admin. How can I help you today?</p>
-              </div>
-            </li>
-            <li class="message sent">
-              <div class="message-content">
-                <p>I have a question about my account status.</p>
-              </div>
-              <div class="message-sender-avatar">
-                <span class="material-icons user-avatar-icon">account_circle</span>
-                <span class="message-sender-name">Me</span>
-              </div>
-            </li>
-            <li class="message received">
-              <div class="message-sender-avatar">
-                <span class="material-icons user-avatar-icon">account_circle</span>
-                <span class="message-sender-name">Admin</span>
-              </div>
-              <div class="message-content">
-                <p>Sure, I can help with that. Please provide your student ID.</p>
-              </div>
-            </li>
-             <li class="message sent">
-              <div class="message-content">
-                <p>My ID is 12345. Also, I wanted to know about the upcoming exam schedule.</p>
-              </div>
-              <div class="message-sender-avatar">
-                <span class="material-icons user-avatar-icon">account_circle</span>
-                <span class="message-sender-name">Me</span>
-              </div>
-            </li>
+            <li class="message received"></li>
           </ul>
         </div>
         <form class="message-input-form">
@@ -152,10 +98,5 @@
       </section>
     </div>
   </div>
-
-  <footer class="footer">
-    <p>&copy; 2025 Student Management System. All rights reserved.</p>
-  </footer>
-
 </body>
 </html>
