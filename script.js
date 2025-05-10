@@ -28,8 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const scrollContainer = document.querySelector('.chat-main .chat-messages-area');
     const inputField = document.querySelector('.message-input-form input[type="text"]');
     const notificationsListUl = document.querySelector('.notifications-content .messages-list');
-    const notificationsDropdownContent = document.querySelector('.notifications-content');
-    const placeholderTextElement = notificationsDropdownContent.querySelector('.placeholder-text');
 
     const modal = document.getElementById("add-student-modal");
     const openBtn = document.getElementById("add-student-btn");
@@ -346,6 +344,8 @@ document.addEventListener("DOMContentLoaded", () => {
         while (notificationsListUl.children.length > 5) {
             notificationsListUl.removeChild(notificationsListUl.lastChild);
         }
+        const notificationsDropdownContent = document.querySelector('.notifications-content');
+        const placeholderTextElement = notificationsDropdownContent.querySelector('.placeholder-text');
         placeholderTextElement.style.display = notificationsListUl.children.length > 0 ? 'none' : 'flex';
     }
 
