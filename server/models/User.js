@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    // ID з вашої PHP бази даних студентів, щоб зв'язати користувачів
     phpStudentId: {
-        type: Number, // Або String, залежно від типу ID у вашій PHP базі
+        type: Number,
         required: true,
         unique: true,
     },
@@ -15,10 +14,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    // Можна додати інші поля, наприклад, group_name
-    // Статус користувача (online/offline) буде керуватися через Socket.IO
-    // і може не зберігатися тут постійно, або зберігатися як lastSeen
-    socketId: { // Для відстеження активного сокету користувача
+    socketId: {
         type: String,
         default: null
     },

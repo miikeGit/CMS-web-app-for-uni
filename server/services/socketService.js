@@ -56,8 +56,7 @@ function initializeSocketService(io) {
             }
         });
 
-        // Створення нової чат-кімнати
-        socket.on('createChatRoom', async ({ name, participantPhpStudentIds, createdByPhpStudentId }) => {
+        socket.on('createChatRoom', async ({participantPhpStudentIds, createdByPhpStudentId }) => {
             try {
                 const creatorMongoUser = await User.findOne({ phpStudentId: createdByPhpStudentId });
                 if (!creatorMongoUser) {
@@ -74,7 +73,7 @@ function initializeSocketService(io) {
                 }
 
                 // Перевірка, чи існує вже приватний чат між цими двома користувачами
-                if (participantMongoUserIds.length === 2 && !name) { // Якщо це потенційно приватний чат і назва не задана
+                if (participantMongoUserIds.length === 2) { // Якщо це потенційно приватний чат і назва не задана
                     const existingPrivateChat = await ChatRoom.findOne({
                         isGroupChat: false,
                         participants: { $all: participantMongoUserIds, $size: 2 }
@@ -88,18 +87,16 @@ function initializeSocketService(io) {
                         return;
                     }
                 }
-
-
                 const newChatRoom = new ChatRoom({
-                    name: name || `Chat between ${creatorMongoUser.firstName} and ${participantMongoUsers.filter(u=> !u._id.equals(creatorMongoUser._id)).map(u => u.firstName).join(', ')}`,
+                    name: `Group: ${participantMongoUsers.map(p => p.firstName).join(', ')}`,
                     participants: participantMongoUserIds,
                     isGroupChat: participantMongoUserIds.length > 2,
                     createdBy: creatorMongoUser._id,
                 });
                 await newChatRoom.save();
                 const populatedNewChatRoom = await ChatRoom.findById(newChatRoom._id)
-                                                    .populate('participants', 'phpStudentId firstName lastName status')
-                                                    .populate('createdBy', 'phpStudentId firstName lastName');
+                                                    .populate('participants', 'phpStudentId firstName lastName status socketId')
+                                                    .populate('createdBy', 'phpStudentId firstName lastName socketId');
 
 
                 // Приєднати всіх учасників до нової кімнати та повідомити їх
@@ -143,15 +140,22 @@ function initializeSocketService(io) {
                 });
 
                 if (newUsersAdded) {
+                    chatRoom.isGroupChat = true;
+                    const firstFewParticipantDocs = await User.find({ _id: { $in: chatRoom.participants.slice(0, 3) } }).select('firstName');
+                    let newGroupName = `Group: ${firstFewParticipantDocs.map(p => p.firstName).join(', ')}`;
+                    if (firstFewParticipantDocs.length < chatRoom.participants.length && firstFewParticipantDocs.length === 3) {
+                        newGroupName += '..';
+                    }
+                    chatRoom.name = newGroupName;
                     await chatRoom.save();
                 }
 
                 const updatedRoom = await ChatRoom.findById(chatRoomId)
-                                            .populate('participants', 'phpStudentId firstName lastName status')
-                                            .populate('createdBy', 'phpStudentId firstName lastName')
+                                            .populate('participants', 'phpStudentId firstName lastName status socketId')
+                                            .populate('createdBy', 'phpStudentId firstName lastName  socketId')
                                             .populate({
                                                 path: 'lastMessage',
-                                                populate: { path: 'senderId', select: 'phpStudentId firstName lastName status' }
+                                                populate: { path: 'senderId', select: 'phpStudentId firstName lastName status socketId' }
                                             });
 
                 // Повідомити нових та існуючих учасників
@@ -204,7 +208,7 @@ function initializeSocketService(io) {
                 await chatRoom.save();
 
                 const populatedMessage = await Message.findById(newMessage._id)
-                    .populate('senderId', 'phpStudentId firstName lastName status');
+                    .populate('senderId', 'phpStudentId firstName lastName status socketId');
 
                 // Надіслати повідомлення всім учасникам кімнати
                 io.to(chatRoomId.toString()).emit('newMessage', populatedMessage);
@@ -247,7 +251,7 @@ function initializeSocketService(io) {
             try {
                 const messages = await Message.find({ chatRoomId })
                     .sort({ createdAt: 1 })
-                    .populate('senderId', 'phpStudentId firstName lastName status');
+                    .populate('senderId', 'phpStudentId firstName lastName status socketId');
                 socket.emit('chatHistory', { chatRoomId, messages });
                 console.log(`History for chat ${chatRoomId} sent to socket ${socket.id}`);
             } catch (error) {
@@ -266,10 +270,10 @@ function initializeSocketService(io) {
                 }
 
                 const chatRooms = await ChatRoom.find({ participants: user._id })
-                    .populate('participants', 'phpStudentId firstName lastName status') // Статуси учасників
+                    .populate('participants', 'phpStudentId firstName lastName status socketId') // Статуси учасників
                     .populate({
                         path: 'lastMessage',
-                        populate: { path: 'senderId', select: 'phpStudentId firstName lastName status' }
+                        populate: { path: 'senderId', select: 'phpStudentId firstName lastName status socketId' }
                     })
                     .sort({ updatedAt: -1 });
 

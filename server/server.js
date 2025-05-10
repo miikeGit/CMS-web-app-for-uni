@@ -3,7 +3,6 @@ const http = require('http');
 const { Server } = require("socket.io");
 const connectDB = require('./config/db');
 const { initializeSocketService } = require('./services/socketService');
-// const chatRoutes = require('./routes/chatRoutes'); // Якщо потрібні REST API маршрути
 
 
 // npm run dev

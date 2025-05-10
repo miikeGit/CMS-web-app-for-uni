@@ -70,26 +70,25 @@
     <div class="chat-container">
       <aside class="chat-sidebar">
         <div class="sidebar-header">
-          <h3>Chat room</h3>
           <button class="button-common new-chat-btn"><i class="material-icons">add</i>New chat room</button>
         </div>
         <ul class="chat-list"></ul>
       </aside>
       <section class="chat-main">
-        <div class="chat-header-main"></div>
-        <div class="chat-members">
-          <h4>Members</h4>
+        <p class="placeholder-text">Select a chat from the sidebar or create a new one to start messaging.</p>
+
+        <div class="chat-header-main" style="display: none;"></div>
+        <div class="chat-members" style="display: none;">
           <div class="member-avatars">
-            <button class="add-member-btn"><i class="material-icons">add_circle_outline</i></button>
+            <!-- <button class="add-member-btn"><i class="material-icons">add_circle_outline</i></button> -->
           </div>
         </div>
-        <div class="chat-messages-area">
-          <h4>Messages</h4>
+        <div class="chat-messages-area" style="display: none;">
           <ul class="message-list-main">
-            <li class="message received"></li>
+            <!-- <li class="message received"></li> -->
           </ul>
         </div>
-        <form class="message-input-form">
+        <form class="message-input-form" style="display: none;">
           <input type="text" placeholder="Type a message..." aria-label="Type a message">
           <button type="submit" class="button-common send-btn" aria-label="Send message">
             <i class="material-icons">send</i>
