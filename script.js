@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Обробка сповіщень (дзвіночок)
-        chatSocket.on('notification', ({ message, chatRoomId, chatRoomName }) => {
+        chatSocket.on('notification', ({ message, chatRoomId, chatRoomName, isGroup }) => {
             console.log('Received notification:', message);
             // Перевірка, чи користувач НЕ в цьому чаті і НЕ на сторінці messages з цим активним чатом
             const onMessagesPage = isMessagesPage();
@@ -159,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }, 800);
                 }
                 // Додати повідомлення до випадаючого списку сповіщень
-                addNotificationToList(message, chatRoomId, chatRoomName);
+                addNotificationToList(message, chatRoomId, chatRoomName, isGroup);
             }
         });
 
@@ -416,17 +416,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function addNotificationToList(message, chatRoomId, chatRoomName) {
+    function addNotificationToList(message, chatRoomId, chatRoomName, isGroup) {
         const notificationsListUl = document.querySelector('.notifications-content .messages-list');
         if (!notificationsListUl) return;
 
         const li = document.createElement('li');
         li.setAttribute('data-chatroom-id', chatRoomId);
-        const senderName = message.senderId ? `${message.senderId.firstName} ${message.senderId.lastName}` : 'Unknown User';
+        const senderName = message.senderId.firstName;
         li.innerHTML = `
-            <span class="material-icons">chat_bubble_outline</span>
+            <span class="material-icons">account_circle</span>
             <div class="message-text">
-                <strong>${escapeHTML(senderName)} (in ${escapeHTML(chatRoomName)})</strong>
+                <strong>${escapeHTML(senderName)} ${isGroup ? `in ${truncateText(chatRoomName, 10)}` : ""}</strong>
                 <p>${truncateText(escapeHTML(message.content), 30)}</p>
             </div>
             <span class="time">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -442,6 +442,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         while (notificationsListUl.children.length > 5) {
             notificationsListUl.removeChild(notificationsListUl.lastChild);
+        }
+
+        const notificationsDropdownContent = document.querySelector('.notifications-content');
+        const placeholderTextElement = notificationsDropdownContent.querySelector('.placeholder-text');
+        if (notificationsListUl.children.length > 0) {
+            placeholderTextElement.style.display = 'none';
+        } else {
+            placeholderTextElement.style.display = 'flex'; // Or 'inline', 'flex' depending on its default
         }
     }
 

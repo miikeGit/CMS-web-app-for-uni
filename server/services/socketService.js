@@ -227,7 +227,8 @@ function initializeSocketService(io) {
                                 targetSocket.emit('notification', {
                                     message: populatedMessage,
                                     chatRoomId: chatRoomId,
-                                    chatRoomName: chatRoom.name // Надсилаємо назву чату для сповіщення
+                                    chatRoomName: chatRoom.name, // Надсилаємо назву чату для сповіщення
+                                    isGroup: chatRoom.isGroupChat
                                 });
                                 console.log(`Notification sent to ${participantUser.phpStudentId} for message in room ${chatRoomId}`);
                             }
