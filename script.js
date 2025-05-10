@@ -344,8 +344,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         li.innerHTML = `
             <div class="message-content">
-                <p>${escapeHTML(message.content)}</p>
-                <span class="message-timestamp">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <p class="message-sender-name"> ${!senderIsCurrentUser ? message.senderId.firstName : ""}</p>
+              <p>${escapeHTML(message.content)}</p>
+              <span class="message-timestamp">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
         `;
         messagesUl.appendChild(li);
